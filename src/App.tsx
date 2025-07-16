@@ -43,6 +43,8 @@ function App() {
   );
 
   const handleClick = async (index: number) => {
+    if (mazo === null) return; // asegúrate de que no es null
+    const cartasJugador = MAZOS[mazo];
     const esCasillaInferior = index >= columnas; // las de abajo
 
     if (jugador !== turno) return;
