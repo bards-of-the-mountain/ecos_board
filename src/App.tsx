@@ -119,6 +119,8 @@ function App() {
     const canal = pusher.subscribe('eco-board');
 
     canal.bind('move', (data: { index: number; carta: CartaColocada }) => {
+      console.log("move")
+      console.log(data)
       setCasillas(prev => {
         const nuevas = [...prev];
         nuevas[data.index] = [...nuevas[data.index], data.carta];
