@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Carta from './components/Carta';
 import Pusher from 'pusher-js';
 import './App.css';
@@ -34,6 +34,7 @@ function App() {
   };
 
   const [jugador, setJugador] = useState<'A' | 'B' | null>(null);
+  const jugadorRef = useRef<'A' | 'B' | null>(null);
   const [mazo, setMazo] = useState<null | 'bosque' | 'torre'>(null);
   const [turno, setTurno] = useState<'A' | 'B'>('A');
   const columnas = ZONAS.length;
@@ -41,6 +42,7 @@ function App() {
   const [casillas, setCasillas] = useState<CartaColocada[][]>(
     Array(2 * columnas).fill(null).map(() => [])
   );
+
 
   const handleClick = async (index: number) => {
     if (mazo === null) return; // asegúrate de que no es null
@@ -84,15 +86,17 @@ function App() {
     });
   };
 
-
   useEffect(() => {
     fetch('https://ecos-board-backend.onrender.com/jugador')
       .then(res => res.json())
-      .then(data => setJugador(data.jugador))
+      .then(data => {
+        setJugador(data.jugador);
+        jugadorRef.current = data.jugador;
+      })
       .catch(err => {
         console.error('Error al obtener jugador:', err);
         alert('No se puede entrar a la partida. Está completa.');
-    });
+      });
   }, []);
 
   useEffect(() => {
@@ -119,13 +123,10 @@ function App() {
     const canal = pusher.subscribe('eco-board');
 
   canal.bind('move', (data: { index: number; carta: any }) => {
-    console.log("move", data)
     const { jugador: jugadorRemoto, ...carta } = data.carta;
 
-    console.log(jugador)
-    console.log(jugadorRemoto)
-    // Ignora el evento si viene de este jugador
-    if (jugadorRemoto === jugador) return;
+    // Usa la ref actualizada
+    if (jugadorRemoto === jugadorRef.current) return;
 
     setCasillas(prev => {
       const nuevas = [...prev];
