@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import Pusher from 'pusher-js';
 import './App.css';
 
 const MAZOS = {
@@ -18,11 +19,39 @@ const ZONAS = [
   { nombre: '🌿 Bosque Vivo', clase: 'zona-bosque' }
 ];
 
+
+
 function App() {
+  const [jugador, setJugador] = useState<'A' | 'B' | null>(null);
   const [mazo, setMazo] = useState<null | 'bosque' | 'torre'>(null);
   const [turno, setTurno] = useState<'A' | 'B'>('A');
   const columnas = ZONAS.length;
   const [casillas, setCasillas] = useState<(null | '🌿' | '🔥')[]>(Array(2 * columnas).fill(null));
+
+  const finalizarTurno = async () => {
+    const nuevo = turno === 'A' ? 'B' : 'A';
+    await fetch('https://ecos-board-backend.onrender.com/turno', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nuevoTurno: nuevo })
+    });
+  };
+
+  useEffect(() => {
+    const pusher = new Pusher('b50eb8000bd0cb796352', {
+      cluster: 'eu'
+    });
+
+    const canal = pusher.subscribe('partida');
+
+    canal.bind('cambio-turno', (data: { turno: 'A' | 'B' }) => {
+      setTurno(data.turno);
+    });
+
+    return () => {
+      pusher.unsubscribe('partida');
+    };
+  }, []);
 
   const handleClick = (index: number) => {
     if (casillas[index]) return;
@@ -36,8 +65,19 @@ function App() {
     return (
       <div className="mazo-select">
         <h2>Elige tu mazo</h2>
-        <button onClick={() => setMazo('bosque')}>🌿 Bosque Vivo</button>
-        <button onClick={() => setMazo('torre')}>🏰 Torre Arcana</button>
+        <button onClick={() => {
+          setMazo('bosque');
+          setJugador(jugador === null ? 'A' : 'B');
+        }}>
+          🌿 Bosque Vivo
+        </button>
+
+        <button onClick={() => {
+          setMazo('torre');
+          setJugador(jugador === null ? 'A' : 'B');
+        }}>
+          🏰 Torre Arcana
+        </button>
       </div>
     );
   }
@@ -69,6 +109,12 @@ function App() {
           </div>
         ))}
       </div>
+
+      {jugador === turno && (
+        <button className="btn-turno" onClick={finalizarTurno}>
+          Finalizar turno
+        </button>
+      )}
     </div>
   );
 }
