@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Carta from './components/Carta';
 import Pusher from 'pusher-js';
 import './App.css';
 
@@ -22,11 +23,45 @@ const ZONAS = [
 
 
 function App() {
+  type CartaColocada = {
+    jugador: 'A' | 'B';
+    carta: {
+      nombre: string;
+      coste: number;
+      ataque: number;
+      vida: number;
+    };
+  };
+
   const [jugador, setJugador] = useState<'A' | 'B' | null>(null);
   const [mazo, setMazo] = useState<null | 'bosque' | 'torre'>(null);
   const [turno, setTurno] = useState<'A' | 'B'>('A');
   const columnas = ZONAS.length;
-  const [casillas, setCasillas] = useState<(null | '🌿' | '🔥')[]>(Array(2 * columnas).fill(null));
+  const [cartaSeleccionada, setCartaSeleccionada] = useState<number | null>(null);
+  const [casillas, setCasillas] = useState<CartaColocada[][]>(
+    Array(2 * columnas).fill(null).map(() => [])
+  );
+
+  const handleClick = (index: number) => {
+    const esCasillaInferior = index >= columnas; // las de abajo
+
+    if (jugador !== turno) return;
+    if (cartaSeleccionada === null) return;
+    if ((jugador === 'A' && !esCasillaInferior) || (jugador === 'B' && esCasillaInferior)) return;
+
+    const nuevas = [...casillas];
+    const carta = cartasJugador[cartaSeleccionada];
+
+    nuevas[index] = [...nuevas[index], { jugador, carta }];
+    setCasillas(nuevas);
+
+    // Eliminar carta del mazo
+    const nuevasCartas = [...cartasJugador];
+    nuevasCartas.splice(cartaSeleccionada, 1);
+    MAZOS[mazo!] = nuevasCartas;
+
+    setCartaSeleccionada(null);
+  };
 
   const finalizarTurno = async () => {
     const nuevo = turno === 'A' ? 'B' : 'A';
@@ -64,14 +99,6 @@ function App() {
     };
   }, []);
 
-  const handleClick = (index: number) => {
-    if (casillas[index]) return;
-    const nuevas = [...casillas];
-    nuevas[index] = turno === 'A' ? '🌿' : '🔥';
-    setCasillas(nuevas);
-    setTurno(turno === 'A' ? 'B' : 'A');
-  };
-
   if (!mazo) {
     return (
       <div className="mazo-select">
@@ -105,22 +132,37 @@ function App() {
         {ZONAS.map((zona, i) => (
           <div key={i} className={`zona-horizontal ${zona.clase}`}>
             <div className="casilla" onClick={() => handleClick(i)}>
-              {casillas[i] || ''}
+              {casillas[i].map((c, idx) => (
+                <Carta
+                  key={idx}
+                  carta={c.carta}
+                  mini
+                  esRival={c.jugador !== jugador}
+                />
+              ))}
             </div>
             <div className="zona-nombre">{zona.nombre}</div>
             <div className="casilla" onClick={() => handleClick(i + columnas)}>
-              {casillas[i + columnas] || ''}
+              {casillas[i + columnas].map((c, idx) => (
+                <Carta
+                  key={idx}
+                  carta={c.carta}
+                  mini
+                  esRival={c.jugador !== jugador}
+                />
+              ))}
             </div>
           </div>
         ))}
       </div>
       <div className="mazo-jugador">
         {cartasJugador.map((carta, idx) => (
-          <div key={idx} className="carta">
-            <strong>{carta.nombre}</strong>
-            <div>Coste: {carta.coste}</div>
-            <div>ATK: {carta.ataque} / VIDA: {carta.vida}</div>
-          </div>
+          <Carta
+            key={idx}
+            carta={carta}
+            seleccionada={cartaSeleccionada === idx}
+            onClick={() => setCartaSeleccionada(idx)}
+          />
         ))}
       </div>
 

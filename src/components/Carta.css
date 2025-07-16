@@ -1,0 +1,31 @@
+.carta {
+  background: #292929;
+  border: 2px solid #444;
+  border-radius: 10px;
+  padding: 1rem;
+  min-width: 150px;
+  text-align: center;
+  transition: transform 0.2s ease;
+  cursor: pointer;
+}
+
+.carta:hover {
+  transform: scale(1.05);
+  border-color: #666;
+}
+
+.carta.seleccionada {
+  border: 2px solid #88f;
+  box-shadow: 0 0 10px #88f;
+}
+
+.carta.mini {
+  transform: scale(0.75);
+  margin: 0.2rem;
+  min-width: 100px;
+  font-size: 0.8rem;
+}
+
+.carta.rival {
+  border: 2px solid #a33;
+}
