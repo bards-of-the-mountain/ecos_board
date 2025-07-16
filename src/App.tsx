@@ -119,8 +119,11 @@ function App() {
     const canal = pusher.subscribe('eco-board');
 
   canal.bind('move', (data: { index: number; carta: any }) => {
+    console.log("move", data)
     const { jugador: jugadorRemoto, ...carta } = data.carta;
 
+    console.log(jugador)
+    console.log(jugadorRemoto)
     // Ignora el evento si viene de este jugador
     if (jugadorRemoto === jugador) return;
 
