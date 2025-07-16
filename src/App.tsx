@@ -125,7 +125,7 @@ function App() {
   canal.bind('move', (data: { index: number; carta: any }) => {
     const { jugador: jugadorRemoto, ...carta } = data.carta;
 
-    console.log(jugadorRef)
+    console.log(jugadorRef.current)
     console.log(jugadorRemoto)
     // Usa la ref actualizada
     if (jugadorRemoto === jugadorRef.current) return;
