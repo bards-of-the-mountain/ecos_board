@@ -37,6 +37,17 @@ function App() {
     });
   };
 
+
+  useEffect(() => {
+    fetch('https://ecos-board-backend.onrender.com/jugador')
+      .then(res => res.json())
+      .then(data => setJugador(data.jugador))
+      .catch(err => {
+        console.error('Error al obtener jugador:', err);
+        alert('No se puede entrar a la partida. Está completa.');
+    });
+  }, []);
+
   useEffect(() => {
     const pusher = new Pusher('b50eb8000bd0cb796352', {
       cluster: 'eu'
