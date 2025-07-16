@@ -129,6 +129,25 @@ function App() {
           Finalizar turno
         </button>
       )}
+
+      {jugador && (
+        <button
+          className="btn-turno"
+          style={{ bottom: '4.5rem', background: '#822' }}
+          onClick={async () => {
+            await fetch('https://ecos-board-backend.onrender.com/salir', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ jugador })
+            });
+
+            setJugador(null);
+            setMazo(null);
+          }}
+        >
+          Salir de la partida
+        </button>
+      )}
     </div>
   );
 }
