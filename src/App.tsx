@@ -118,15 +118,18 @@ function App() {
 
     const canal = pusher.subscribe('eco-board');
 
-    canal.bind('move', (data: { index: number; carta: any }) => {
-      const { jugador, ...carta } = data.carta;
+  canal.bind('move', (data: { index: number; carta: any }) => {
+    const { jugador: jugadorRemoto, ...carta } = data.carta;
 
-      setCasillas(prev => {
-        const nuevas = [...prev];
-        nuevas[data.index] = [...nuevas[data.index], { jugador, carta }];
-        return nuevas;
-      });
+    // Ignora el evento si viene de este jugador
+    if (jugadorRemoto === jugador) return;
+
+    setCasillas(prev => {
+      const nuevas = [...prev];
+      nuevas[data.index] = [...nuevas[data.index], { jugador: jugadorRemoto, carta }];
+      return nuevas;
     });
+  });
 
     return () => {
       pusher.unsubscribe('eco-board');
