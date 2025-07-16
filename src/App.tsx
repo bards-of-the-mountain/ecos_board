@@ -97,6 +97,9 @@ function App() {
 
   return (
     <div className="tablero-container">
+      <div style={{ position: 'absolute', top: '1rem', left: '1rem', color: '#aaa', fontWeight: 'bold' }}>
+        Eres: Jugador {jugador}
+      </div>
       <p className="turno">Turno de: <strong>{turno === 'A' ? 'Jugador A (🌿)' : 'Jugador B (🔥)'}</strong></p>
       <div className="tablero-horizontal">
         {ZONAS.map((zona, i) => (
