@@ -42,7 +42,7 @@ function App() {
     Array(2 * columnas).fill(null).map(() => [])
   );
 
-  const handleClick = (index: number) => {
+  const handleClick = async (index: number) => {
     const esCasillaInferior = index >= columnas; // las de abajo
 
     if (jugador !== turno) return;
@@ -54,6 +54,18 @@ function App() {
 
     nuevas[index] = [...nuevas[index], { jugador, carta }];
     setCasillas(nuevas);
+
+    await fetch('https://ecos-board-backend.onrender.com/move', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        index,
+        carta: {
+          jugador,
+          carta
+        }
+      })
+    });
 
     // Eliminar carta del mazo
     const nuevasCartas = [...cartasJugador];
@@ -96,6 +108,26 @@ function App() {
 
     return () => {
       pusher.unsubscribe('partida');
+    };
+  }, []);
+
+  useEffect(() => {
+    const pusher = new Pusher('b50eb8000bd0cb796352', {
+      cluster: 'eu'
+    });
+
+    const canal = pusher.subscribe('eco-board');
+
+    canal.bind('move', (data: { index: number; carta: CartaColocada }) => {
+      setCasillas(prev => {
+        const nuevas = [...prev];
+        nuevas[data.index] = [...nuevas[data.index], data.carta];
+        return nuevas;
+      });
+    });
+
+    return () => {
+      pusher.unsubscribe('eco-board');
     };
   }, []);
 
