@@ -164,25 +164,29 @@ function App() {
         {ZONAS.map((zona, i) => (
           <div key={i} className={`zona-horizontal ${zona.clase}`}>
             <div className="casilla" onClick={() => handleClick(i)}>
-              {casillas[i].map((c, idx) => (
-                <Carta
-                  key={idx}
-                  carta={c.carta}
-                  mini
-                  esRival={c.jugador !== jugador}
-                />
-              ))}
+              {Array.isArray(casillas[i]) && casillas[i].map((c, idx) =>
+                c?.carta ? (
+                  <Carta
+                    key={idx}
+                    carta={c.carta}
+                    mini
+                    esRival={c.jugador !== jugador}
+                  />
+                ) : null
+              )}
             </div>
             <div className="zona-nombre">{zona.nombre}</div>
             <div className="casilla" onClick={() => handleClick(i + columnas)}>
-              {casillas[i + columnas].map((c, idx) => (
-                <Carta
-                  key={idx}
-                  carta={c.carta}
-                  mini
-                  esRival={c.jugador !== jugador}
-                />
-              ))}
+              {Array.isArray(casillas[i + columnas]) && casillas[i + columnas].map((c, idx) =>
+                c?.carta ? (
+                  <Carta
+                    key={idx}
+                    carta={c.carta}
+                    mini
+                    esRival={c.jugador !== jugador}
+                  />
+                ) : null
+              )}
             </div>
           </div>
         ))}
