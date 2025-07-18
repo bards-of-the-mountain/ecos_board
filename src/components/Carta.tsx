@@ -1,5 +1,7 @@
-// src/components/Carta.tsx
+import { useState } from 'react';
 import './Carta.css';
+import ReactDOM from 'react-dom';
+import CartaPreview from './CartaPreview';
 
 interface CartaProps {
   carta: {
@@ -7,6 +9,7 @@ interface CartaProps {
     coste: number;
     ataque: number;
     vida: number;
+    descripcion?: string;
   };
   seleccionada?: boolean;
   mini?: boolean;
@@ -14,16 +17,28 @@ interface CartaProps {
   onClick?: () => void;
 }
 
-const Carta = ({ carta, seleccionada = false, onClick, mini, esRival}: CartaProps) => {
+const Carta = ({ carta, seleccionada = false, onClick, mini = false, esRival = false }: CartaProps) => {
+  const [hover, setHover] = useState(false);
+
   return (
-    <div
-    className={`carta ${seleccionada ? 'seleccionada' : ''} ${mini ? 'mini' : ''} ${esRival ? 'rival' : ''}`}
-    onClick={onClick}
-    >
-      <strong>{carta.nombre}</strong>
-      <div>Coste: {carta.coste}</div>
-      <div>ATK: {carta.ataque} / VIDA: {carta.vida}</div>
-    </div>
+    <>
+      <div
+        className={`carta ${seleccionada ? 'seleccionada' : ''} ${mini ? 'mini' : ''} ${esRival ? 'rival' : ''}`}
+        onClick={onClick}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+      >
+        <div className="carta-nombre">{carta.nombre}</div>
+        <div className="carta-coste">💧 {carta.coste}</div>
+        <div className="carta-stats">⚔️ {carta.ataque} / 🛡️ {carta.vida}</div>
+      </div>
+
+      {mini && hover &&        
+       ReactDOM.createPortal(
+          <CartaPreview carta={carta} />,
+          document.getElementById('portal-root') as Element
+        )}
+    </>
   );
 };
 

@@ -52,6 +52,7 @@ function App() {
 
 
   const handleClick = async (index: number) => {
+    console.log("Click en casilla con carta seleccionada: ", cartaSeleccionada)
     const esCasillaInferior = index >= columnas;
 
     if (jugador !== turno) return;
@@ -122,31 +123,35 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (!jugador) return; // no te suscribas hasta que tengas un jugador válido
+
+    jugadorRef.current = jugador;
+
     const pusher = new Pusher('b50eb8000bd0cb796352', {
       cluster: 'eu'
     });
 
     const canal = pusher.subscribe('eco-board');
 
-  canal.bind('move', (data: { index: number; carta: any }) => {
-    const { jugador: jugadorRemoto, ...carta } = data.carta;
+    canal.bind('move', (data: { index: number; carta: any }) => {
+      const { jugador: jugadorRemoto, ...carta } = data.carta;
 
-    console.log(jugadorRef.current)
-    console.log(jugadorRemoto)
-    // Usa la ref actualizada
-    if (jugadorRemoto === jugadorRef.current) return;
+      console.log("Jugador actual: ", jugadorRef.current);
+      console.log("Jugador que ha movido la carta: ", jugadorRemoto);
 
-    setCasillas(prev => {
-      const nuevas = [...prev];
-      nuevas[data.index] = [...nuevas[data.index], { jugador: jugadorRemoto, carta }];
-      return nuevas;
+      if (jugadorRemoto === jugadorRef.current) return;
+
+      setCasillas(prev => {
+        const nuevas = [...prev];
+        nuevas[data.index] = [...nuevas[data.index], { jugador: jugadorRemoto, carta }];
+        return nuevas;
+      });
     });
-  });
 
     return () => {
       pusher.unsubscribe('eco-board');
     };
-  }, []);
+  }, [jugador]);
 
   if (!mazo) {
     return (
@@ -213,6 +218,7 @@ function App() {
             carta={carta}
             seleccionada={cartaSeleccionada === idx}
             onClick={() => setCartaSeleccionada(idx)}
+            mini
           />
         ))}
       </div>
