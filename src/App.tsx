@@ -33,6 +33,7 @@ function App() {
     };
   };
 
+  const [cartasJugador, setCartasJugador] = useState<typeof MAZOS['bosque']>([]);
   const [jugador, setJugador] = useState<'A' | 'B' | null>(null);
   const jugadorRef = useRef<'A' | 'B' | null>(null);
   const [mazo, setMazo] = useState<null | 'bosque' | 'torre'>(null);
@@ -43,11 +44,15 @@ function App() {
     Array(2 * columnas).fill(null).map(() => [])
   );
 
+  useEffect(() => {
+    if (mazo) {
+      setCartasJugador([...MAZOS[mazo]]);
+    }
+  }, [mazo]);
+
 
   const handleClick = async (index: number) => {
-    if (mazo === null) return; // asegúrate de que no es null
-    const cartasJugador = MAZOS[mazo];
-    const esCasillaInferior = index >= columnas; // las de abajo
+    const esCasillaInferior = index >= columnas;
 
     if (jugador !== turno) return;
     if (cartaSeleccionada === null) return;
@@ -69,13 +74,14 @@ function App() {
       })
     });
 
-    // Eliminar carta del mazo
+    // Eliminar carta del mazo del jugador
     const nuevasCartas = [...cartasJugador];
-    nuevasCartas.splice(cartaSeleccionada, 1);
-    MAZOS[mazo!] = nuevasCartas;
+    nuevasCartas.splice(cartaSeleccionada!, 1); 
+    setCartasJugador(nuevasCartas);
 
     setCartaSeleccionada(null);
   };
+
 
   const finalizarTurno = async () => {
     const nuevo = turno === 'A' ? 'B' : 'A';
@@ -163,8 +169,6 @@ function App() {
     );
   }
 
-  const cartasJugador = MAZOS[mazo];
-
   return (
     <div className="tablero-container">
       <div style={{ position: 'absolute', top: '1rem', left: '1rem', color: '#aaa', fontWeight: 'bold' }}>
@@ -213,30 +217,74 @@ function App() {
         ))}
       </div>
 
-      {jugador === turno && (
-        <button className="btn-turno" onClick={finalizarTurno}>
-          Finalizar turno
-        </button>
-      )}
-
-      {jugador && (
+      <div className="zona-controles">
         <button
           className="btn-turno"
-          style={{ bottom: '4.5rem', background: '#822' }}
-          onClick={async () => {
-            await fetch('https://ecos-board-backend.onrender.com/salir', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ jugador })
-            });
+          style={{ background: '#446' }}
+          onClick={() => {
+            const cantidad = parseInt(window.prompt('¿Cuántas cartas quieres robar?', '1') || '0');
+            if (isNaN(cantidad) || cantidad <= 0 || !mazo) return;
 
-            setJugador(null);
-            setMazo(null);
+            const mazoOriginal = MAZOS[mazo];
+            const disponibles = mazoOriginal.filter(
+              c => !cartasJugador.find(cc => cc.nombre === c.nombre)
+            );
+
+            const robadas = disponibles.slice(0, cantidad);
+            setCartasJugador(prev => [...prev, ...robadas]);
           }}
         >
-          Salir de la partida
+          Robar cartas
         </button>
-      )}
+
+        <button
+          className="btn-turno"
+          style={{ background: '#553' }}
+          onClick={() => {
+            if (mazo) {
+              setCartasJugador([...MAZOS[mazo]]);
+              setCartaSeleccionada(null);
+            }
+          }}
+        >
+          Reiniciar mazo
+        </button>
+
+        {jugador === turno && (
+          <button className="btn-turno" style={{ background: '#2a5' }} onClick={finalizarTurno}>
+            Finalizar turno
+          </button>
+        )}
+
+        <button
+          className="btn-turno"
+          style={{ background: '#444' }}
+          onClick={() => {
+            setCasillas(Array(2 * columnas).fill(null).map(() => []));
+          }}
+        >
+          🧹 Limpiar tablero
+        </button>
+
+        {jugador && (
+          <button
+            className="btn-turno"
+            style={{ background: '#822' }}
+            onClick={async () => {
+              await fetch('https://ecos-board-backend.onrender.com/salir', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ jugador })
+              });
+
+              setJugador(null);
+              setMazo(null);
+            }}
+          >
+            Salir de la partida
+          </button>
+        )}
+      </div>
     </div>
   );
 }
