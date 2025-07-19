@@ -43,10 +43,23 @@ function App() {
   const [casillas, setCasillas] = useState<CartaColocada[][]>(
     Array(2 * columnas).fill(null).map(() => [])
   );
+  
+  // Cálculo fuera del onClick, antes del return
+  const mazoOriginal = mazo ? MAZOS[mazo] : [];
+  const nombresEnMesa = casillas.flat()
+    .filter(c => c?.jugador === jugador)
+    .map(c => c.carta.nombre);
+
+  const nombresEnMano = cartasJugador.map(c => c.nombre);
+
+  const disponibles = mazoOriginal.filter(
+    c => !nombresEnMano.includes(c.nombre) && !nombresEnMesa.includes(c.nombre)
+  );
+  const cartasRestantes = disponibles.length;
 
   useEffect(() => {
     if (mazo) {
-      setCartasJugador([...MAZOS[mazo]]);
+      setCartasJugador([]); 
     }
   }, [mazo]);
 
@@ -228,19 +241,42 @@ function App() {
           className="btn-turno"
           style={{ background: '#446' }}
           onClick={() => {
+            if (!mazo) return;
             const cantidad = parseInt(window.prompt('¿Cuántas cartas quieres robar?', '1') || '0');
-            if (isNaN(cantidad) || cantidad <= 0 || !mazo) return;
+            if (isNaN(cantidad) || cantidad <= 0) return;
 
+            // Calcula cuáles cartas quedan en el mazo (no están en la mano NI en la mesa)
             const mazoOriginal = MAZOS[mazo];
+
+            // Cartas jugadas en la mesa (solo las propias)
+            const nombresEnMesa = casillas.flat()
+              .filter(c => c?.jugador === jugador)
+              .map(c => c.carta.nombre);
+
+            // Cartas en la mano
+            const nombresEnMano = cartasJugador.map(c => c.nombre);
+
+            // Cartas disponibles para robar (ni en mano ni en mesa)
             const disponibles = mazoOriginal.filter(
-              c => !cartasJugador.find(cc => cc.nombre === c.nombre)
+              c => !nombresEnMano.includes(c.nombre) && !nombresEnMesa.includes(c.nombre)
             );
 
+            // Solo roba las que queden
             const robadas = disponibles.slice(0, cantidad);
             setCartasJugador(prev => [...prev, ...robadas]);
           }}
         >
           Robar cartas
+          <span style={{
+            marginLeft: 8,
+            background: '#222',
+            borderRadius: '999px',
+            padding: '2px 8px',
+            fontWeight: 'bold',
+            fontSize: '0.95em'
+          }}>
+            {cartasRestantes}
+          </span>
         </button>
 
         <button
