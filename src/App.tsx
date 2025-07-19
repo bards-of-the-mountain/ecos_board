@@ -43,6 +43,9 @@ function App() {
   const [casillas, setCasillas] = useState<CartaColocada[][]>(
     Array(2 * columnas).fill(null).map(() => [])
   );
+  const [descartes, setDescartes] = useState<
+    { nombre: string; coste: number; ataque: number; vida: number; descripcion?: string }[]
+  >([]);
   
   // Cálculo fuera del onClick, antes del return
   const mazoOriginal = mazo ? MAZOS[mazo] : [];
@@ -52,8 +55,14 @@ function App() {
 
   const nombresEnMano = cartasJugador.map(c => c.nombre);
 
+  const nombresEnDescartes = descartes.map(c => c.nombre);
+
+  // Cartas disponibles para robar (ni en mano, ni en mesa, ni en cementerio)
   const disponibles = mazoOriginal.filter(
-    c => !nombresEnMano.includes(c.nombre) && !nombresEnMesa.includes(c.nombre)
+    c =>
+      !nombresEnMano.includes(c.nombre) &&
+      !nombresEnMesa.includes(c.nombre) &&
+      !nombresEnDescartes.includes(c.nombre)
   );
   const cartasRestantes = disponibles.length;
 
@@ -204,6 +213,18 @@ function App() {
                     carta={c.carta}
                     mini
                     esRival={c.jugador !== jugador}
+                    previewOnClick 
+                    onContextMenu={e => {
+                      e.preventDefault(); // Evita menú contextual
+                      // Elimina la carta del array de la casilla correspondiente
+                      setCasillas(prev => {
+                        const nuevas = [...prev];
+                        nuevas[i] = nuevas[i].filter((_, ix) => ix !== idx); // 'i' es la casilla, 'idx' la carta dentro de la casilla
+                        return nuevas;
+                      });
+                      // Añade la carta a descartes
+                      setDescartes(prev => [...prev, c.carta]);
+                    }}
                   />
                 ) : null
               )}
@@ -217,6 +238,17 @@ function App() {
                     carta={c.carta}
                     mini
                     esRival={c.jugador !== jugador}
+                    previewOnClick 
+                    onContextMenu={e => {
+                      e.preventDefault();
+                      setCasillas(prev => {
+                        const nuevas = [...prev];
+                        // Aquí es i + columnas (y no solo i)
+                        nuevas[i + columnas] = nuevas[i + columnas].filter((_, ix) => ix !== idx);
+                        return nuevas;
+                      });
+                      setDescartes(prev => [...prev, c.carta]);
+                    }}
                   />
                 ) : null
               )}
@@ -298,16 +330,6 @@ function App() {
           </button>
         )}
 
-        <button
-          className="btn-turno"
-          style={{ background: '#444' }}
-          onClick={() => {
-            setCasillas(Array(2 * columnas).fill(null).map(() => []));
-          }}
-        >
-          🧹 Limpiar tablero
-        </button>
-
         {jugador && (
           <button
             className="btn-turno"
@@ -326,6 +348,10 @@ function App() {
             Salir de la partida
           </button>
         )}
+      </div>
+
+      <div className="pila-descartes">
+        🗑️ <span>{descartes.length}</span>
       </div>
     </div>
   );
